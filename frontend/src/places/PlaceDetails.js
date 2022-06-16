@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useHistory, useParams } from "react-router"
 import CommentCard from './CommentCard'
 import NewCommentForm from "./NewCommentForm";
+import { CurrentUser } from '../contexts/CurrentUser';
 
 function PlaceDetails() {
 
 	const { placeId } = useParams()
 
 	const history = useHistory()
+
+	const { currentUser } = useContext(CurrentUser)
 
 	const [place, setPlace] = useState(null)
 
@@ -37,7 +40,11 @@ function PlaceDetails() {
 
 	async function deleteComment(deletedComment) {
 		await fetch(`http://localhost:5000/places/${place.placeId}/comments/${deletedComment.commentId}`, {
-			method: 'DELETE'
+			method: 'DELETE',
+			headers:{
+				"Content-Type":"application/json",
+				"Authorization": `Bearer ${localStorage.getItem("token")}`
+			}
 		})
 
 		setPlace({
@@ -51,6 +58,7 @@ function PlaceDetails() {
 		const response = await fetch(`http://localhost:5000/places/${place.placeId}/comments`, {
 			method: 'POST',
 			headers: {
+				"Authorization":`Bearer ${localStorage.getItem("token")}`,
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(commentAttributes)
@@ -101,6 +109,19 @@ function PlaceDetails() {
 		})
 	}
 
+	let placeActions = null
+	if (currentUser?.role === "admin") {
+		placeActions = (
+			<>
+			<a className="btn btn-warning" onClick={editPlace}>
+				Edit
+			</a>
+			<button type="submit" className="btn btn-danger" onClick={deletePlace}>
+				Delete
+			</button>
+			</>
+		)
+	}
 
 	return (
 		<main>
